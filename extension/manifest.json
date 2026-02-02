@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "SimpleReader - Local RSS",
+  "version": "1.0.0",
+  "description": "Privacy-focused, local-first RSS reader with cross-device sync.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "optional_host_permissions": [],
+  "background": {
+    "service_worker": "src/background/index.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "SimpleReader"
+  },
+  "icons": {
+     "16": "icons/icon-16.png",
+     "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
