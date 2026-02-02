@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import DOMPurify from 'dompurify';
 import '../App.css';
 import { getSubscriptions, saveSubscriptions, getItems, saveItems } from '../utils/storage';
-// REMOVED: import { fetchFeed } from '../utils/fetcher'; - Fetching must happen in Background
 
 function Dashboard() {
     const [subscriptions, setSubscriptions] = useState([]);
@@ -9,6 +9,7 @@ function Dashboard() {
     const [newFeedUrl, setNewFeedUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [selectedFeedId, setSelectedFeedId] = useState(null);
+    const [expandedItems, setExpandedItems] = useState(new Set());
 
     useEffect(() => {
         loadData();
@@ -43,6 +44,15 @@ function Dashboard() {
         refreshItems();
     }, [selectedFeedId]);
 
+    const toggleExpand = (itemId) => {
+        const newSet = new Set(expandedItems);
+        if (newSet.has(itemId)) {
+            newSet.delete(itemId);
+        } else {
+            newSet.add(itemId);
+        }
+        setExpandedItems(newSet);
+    };
 
     const handleAddFeed = async (e) => {
         e.preventDefault();
@@ -54,7 +64,6 @@ function Dashboard() {
         chrome.runtime.sendMessage({ type: 'ADD_FEED', url: newFeedUrl }, (response) => {
             setLoading(false);
 
-            // Handle connection errors (e.g. background script asleep or updated)
             if (chrome.runtime.lastError) {
                 console.error('Runtime error:', chrome.runtime.lastError);
                 alert('Error connecting to background service. Please reload the extension.');
@@ -63,7 +72,6 @@ function Dashboard() {
 
             if (response && response.success) {
                 setNewFeedUrl('');
-                // UI updates automatically via storage listener
             } else {
                 console.error('Background error:', response?.error);
                 alert(`Failed to add feed: ${response?.error || 'Unknown error'}`);
@@ -113,21 +121,75 @@ function Dashboard() {
                         <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '50px' }}>
                             <p style={{ fontSize: '1.2rem' }}>No articles found.</p>
                             <p>Add a trusted RSS feed (e.g., https://news.ycombinator.com/rss) to verify.</p>
-                            <p style={{ fontSize: '0.8rem', marginTop: '10px' }}>Note: If fetch fails, ensure the URL is correct and valid XML.</p>
                         </div>
                     )}
-                    {items.map(item => (
-                        <div key={item.id} className="article-card">
-                            <a href={item.link} target="_blank" rel="noopener noreferrer">
-                                {item.title}
-                            </a>
-                            <div className="article-meta">
-                                <span>{item.pubDate ? new Date(item.pubDate).toLocaleDateString() : ''}</span>
-                                <span>•</span>
-                                <span>{subscriptions.find(s => s.id === item.feedId)?.title}</span>
+                    {items.map(item => {
+                        const isExpanded = expandedItems.has(item.id);
+                        return (
+                            <div
+                                key={item.id}
+                                className={`article-card ${isExpanded ? 'expanded' : ''}`}
+                                onClick={() => toggleExpand(item.id)}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                <h3 style={{ margin: '0 0 10px 0', fontSize: '1.25rem', color: 'var(--text-main)' }}>
+                                    {item.title}
+                                </h3>
+
+                                <div className="article-meta" style={{ marginBottom: '12px' }}>
+                                    <span>{item.pubDate ? new Date(item.pubDate).toLocaleDateString() : ''}</span>
+                                    <span>•</span>
+                                    <span>{subscriptions.find(s => s.id === item.feedId)?.title}</span>
+                                </div>
+
+                                {item.content && (
+                                    <div
+                                        className="article-content"
+                                        style={{
+                                            color: '#cbd5e1',
+                                            fontSize: '0.95rem',
+                                            lineHeight: '1.6',
+                                            maxHeight: isExpanded ? 'none' : '150px',
+                                            overflow: 'hidden',
+                                            position: 'relative',
+                                            maskImage: isExpanded ? 'none' : 'linear-gradient(to bottom, black 60%, transparent 100%)',
+                                            WebkitMaskImage: isExpanded ? 'none' : 'linear-gradient(to bottom, black 60%, transparent 100%)',
+
+                                            /* Fix overflow */
+                                            overflowWrap: 'break-word',
+                                            wordWrap: 'break-word',
+                                            wordBreak: 'break-word',
+                                            maxWidth: '100%'
+                                        }}
+                                    >
+                                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.content, { ADD_TAGS: ['img', 'iframe'], ADD_ATTR: ['src', 'width', 'height', 'style'] }) }} />
+                                    </div>
+                                )}
+
+                                {isExpanded && (
+                                    <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                                        <a
+                                            href={item.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => e.stopPropagation()} /* Prevent closing card */
+                                            style={{
+                                                display: 'inline-block',
+                                                backgroundColor: 'var(--bg-hover)',
+                                                color: 'white',
+                                                padding: '8px 16px',
+                                                borderRadius: '4px',
+                                                textDecoration: 'none',
+                                                fontSize: '0.9rem'
+                                            }}
+                                        >
+                                            Read Full Article →
+                                        </a>
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>
