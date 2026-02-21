@@ -258,6 +258,44 @@
   text-transform: uppercase;
 }
 
+.header-refresh {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.last-updated {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--ink-light);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.refresh-btn {
+  background: transparent;
+  border: none;
+  color: var(--ink-light);
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 2px 4px;
+  width: auto;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color 0.15s;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  color: var(--ink);
+  background: transparent;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 /* Article List */
 
 .article-list {

@@ -1,11 +1,17 @@
 import { fetchFeed } from '../utils/fetcher';
-import { getSubscriptions, saveSubscriptions, saveItems, getItems, getSettings, markItemRead } from '../utils/storage';
+import { getSubscriptions, saveSubscriptions, saveItems, getItems, getSettings, markItemRead, saveLastRefreshed } from '../utils/storage';
 
 const ALARM_NAME = 'refresh_feeds';
 
 // Initialize Alarm on Install
 chrome.runtime.onInstalled.addListener(async () => {
     console.log('SimpleReader Installed');
+    await setupAlarm();
+});
+
+// Re-create alarm on browser startup (guards against alarm loss on Chrome updates / disable+re-enable)
+chrome.runtime.onStartup.addListener(async () => {
+    console.log('SimpleReader startup');
     await setupAlarm();
 });
 
@@ -66,6 +72,8 @@ async function addNewFeed(url) {
 }
 
 async function setupAlarm() {
+    const existing = await chrome.alarms.get(ALARM_NAME);
+    if (existing) return;
     const settings = await getSettings();
     chrome.alarms.create(ALARM_NAME, {
         periodInMinutes: settings.refreshInterval || 30
@@ -102,6 +110,7 @@ async function refreshAllFeeds() {
     }));
 
     await updateBadge();
+    await saveLastRefreshed(new Date().toISOString());
 }
 
 async function updateBadge() {

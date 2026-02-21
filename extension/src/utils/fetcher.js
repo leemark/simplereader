@@ -20,7 +20,14 @@ function getText(value) {
  */
 export async function fetchFeed(url) {
     try {
-        const response = await fetch(url);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        let response;
+        try {
+            response = await fetch(url, { signal: controller.signal });
+        } finally {
+            clearTimeout(timeoutId);
+        }
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const xmlText = await response.text();

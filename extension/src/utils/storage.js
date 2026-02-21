@@ -115,6 +115,21 @@ export async function markItemRead(itemId, feedId, isRead = true) {
 }
 
 /**
+ * Get the ISO timestamp of the last successful feed refresh from Local Storage
+ */
+export async function getLastRefreshed() {
+    const data = await chrome.storage.local.get(['lastRefreshedAt']);
+    return data.lastRefreshedAt || null;
+}
+
+/**
+ * Save the ISO timestamp of the last successful feed refresh to Local Storage
+ */
+export async function saveLastRefreshed(ts) {
+    await chrome.storage.local.set({ lastRefreshedAt: ts });
+}
+
+/**
  * Clear all data (Debugging/Reset)
  */
 export async function clearAllData() {

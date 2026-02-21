@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import DOMPurify from 'dompurify';
 import '../App.css';
-import { getSubscriptions, getItems } from '../utils/storage';
+import { getSubscriptions, getItems, getLastRefreshed } from '../utils/storage';
 import { parseOPML, generateOPML } from '../utils/opml';
 
 const PAGE_SIZE = 50;
@@ -93,6 +93,10 @@ function Dashboard() {
     const [importStatus, setImportStatus] = useState('');
     const fileInputRef = useRef(null);
 
+    const [lastRefreshedAt, setLastRefreshedAt] = useState(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [, setTickCount] = useState(0);
+
     // O(1) feed title lookup instead of O(n) find() called once per rendered item.
     const subMap = useMemo(
         () => Object.fromEntries(subscriptions.map(s => [s.id, s.title])),
@@ -115,11 +119,21 @@ function Dashboard() {
                 setSubscriptions(changes.subscriptions.newValue || []);
             }
             if (area === 'local') {
+                if (changes.lastRefreshedAt) {
+                    setLastRefreshedAt(changes.lastRefreshedAt.newValue || null);
+                }
                 refreshItems();
             }
         };
         chrome.storage.onChanged.addListener(handleStorageChange);
-        return () => chrome.storage.onChanged.removeListener(handleStorageChange);
+
+        // Tick every minute so the relative-time label stays current
+        const ticker = setInterval(() => setTickCount(n => n + 1), 60000);
+
+        return () => {
+            chrome.storage.onChanged.removeListener(handleStorageChange);
+            clearInterval(ticker);
+        };
     }, []);
 
     useEffect(() => {
@@ -128,8 +142,9 @@ function Dashboard() {
     }, [selectedFeedId]);
 
     const loadData = async () => {
-        const subs = await getSubscriptions();
+        const [subs, ts] = await Promise.all([getSubscriptions(), getLastRefreshed()]);
         setSubscriptions(subs);
+        setLastRefreshedAt(ts);
         refreshItems();
     };
 
@@ -147,6 +162,25 @@ function Dashboard() {
             return next;
         });
     }, []);
+
+    const relativeTime = (isoTs) => {
+        if (!isoTs) return null;
+        const diffMs = Date.now() - new Date(isoTs).getTime();
+        const diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 1) return 'just now';
+        if (diffMin < 60) return `${diffMin} min ago`;
+        const diffHr = Math.floor(diffMin / 60);
+        if (diffHr < 24) return `${diffHr}h ago`;
+        return `${Math.floor(diffHr / 24)}d ago`;
+    };
+
+    const handleManualRefresh = () => {
+        if (isRefreshing) return;
+        setIsRefreshing(true);
+        chrome.runtime.sendMessage({ type: 'REFRESH_FEEDS' }, () => {
+            setIsRefreshing(false);
+        });
+    };
 
     const handleAddFeed = async (e) => {
         e.preventDefault();
@@ -262,6 +296,21 @@ function Dashboard() {
                     {items.length > 0 && (
                         <span className="article-count">{items.length} articles</span>
                     )}
+                    <div className="header-refresh">
+                        {isRefreshing ? (
+                            <span className="last-updated">Refreshing…</span>
+                        ) : lastRefreshedAt ? (
+                            <span className="last-updated">Updated {relativeTime(lastRefreshedAt)}</span>
+                        ) : null}
+                        <button
+                            className="refresh-btn"
+                            onClick={handleManualRefresh}
+                            disabled={isRefreshing}
+                            title="Refresh feeds"
+                        >
+                            ↻
+                        </button>
+                    </div>
                 </header>
 
                 <div className="article-list">
