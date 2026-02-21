@@ -65,9 +65,12 @@ export async function getItems(feedId = null) {
     return keys.flatMap(key => Object.values(data[key] || {}));
 }
 
+const MAX_ITEMS_PER_FEED = 200;
+
 /**
  * Save New Items to Local Storage
  * Reads and writes only the affected feed's key, not the entire items collection.
+ * Trims to MAX_ITEMS_PER_FEED most recent items to prevent unbounded storage growth.
  */
 export async function saveItems(newItems) {
     if (newItems.length === 0) return;
@@ -84,7 +87,17 @@ export async function saveItems(newItems) {
         }
     });
 
-    await chrome.storage.local.set({ [key]: currentItems });
+    // Trim to the most recent MAX_ITEMS_PER_FEED items
+    const allValues = Object.values(currentItems);
+    if (allValues.length > MAX_ITEMS_PER_FEED) {
+        allValues.sort((a, b) => new Date(b.pubDate || b.fetchedAt) - new Date(a.pubDate || a.fetchedAt));
+        const trimmed = allValues.slice(0, MAX_ITEMS_PER_FEED);
+        const trimmedObj = {};
+        trimmed.forEach(item => { trimmedObj[item.id] = item; });
+        await chrome.storage.local.set({ [key]: trimmedObj });
+    } else {
+        await chrome.storage.local.set({ [key]: currentItems });
+    }
 }
 
 /**

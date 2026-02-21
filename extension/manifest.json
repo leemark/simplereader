@@ -5,6 +5,7 @@
   "description": "Privacy-focused, local-first RSS reader with cross-device sync.",
   "permissions": [
     "storage",
+    "unlimitedStorage",
     "alarms",
     "activeTab",
     "scripting"

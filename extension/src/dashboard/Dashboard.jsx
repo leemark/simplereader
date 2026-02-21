@@ -1,8 +1,84 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import DOMPurify from 'dompurify';
 import '../App.css';
 import { getSubscriptions, getItems } from '../utils/storage';
 import { parseOPML, generateOPML } from '../utils/opml';
+
+const PAGE_SIZE = 50;
+
+// Strip HTML tags for collapsed plain-text previews — no DOMPurify needed.
+function stripHtml(html) {
+    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Memoized per-article component. Only re-renders when its own props change,
+// so expanding one article doesn't re-render all others.
+const ArticleItem = React.memo(function ArticleItem({ item, feedTitle, isExpanded, onToggle }) {
+    // Plain text excerpt for collapsed view — computed once, no sanitization.
+    const textExcerpt = useMemo(() => {
+        if (!item.content) return '';
+        return stripHtml(item.content).slice(0, 300);
+    }, [item.content]);
+
+    // Sanitize only when expanded, and only once per item (memoized by isExpanded + content).
+    const sanitizedContent = useMemo(() => {
+        if (!isExpanded || !item.content) return null;
+        return DOMPurify.sanitize(item.content, {
+            ADD_TAGS: ['img', 'iframe'],
+            ADD_ATTR: ['src', 'width', 'height', 'style']
+        });
+    }, [isExpanded, item.content]);
+
+    const pubDate = item.pubDate
+        ? new Date(item.pubDate).toLocaleDateString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric'
+        })
+        : '';
+
+    return (
+        <article
+            className={`article-item ${isExpanded ? 'expanded' : ''}`}
+            onClick={() => onToggle(item.id)}
+        >
+            <h2 className="article-title">{item.title}</h2>
+
+            <div className="article-meta">
+                {feedTitle && <span className="feed-source">{feedTitle}</span>}
+                {feedTitle && pubDate && <span className="meta-sep">·</span>}
+                {pubDate && <time className="article-date">{pubDate}</time>}
+            </div>
+
+            {/* Collapsed: cheap plain-text preview, no sanitization */}
+            {!isExpanded && textExcerpt && (
+                <p className="article-preview">{textExcerpt}</p>
+            )}
+
+            {/* Expanded: full HTML, sanitized once and memoized */}
+            {isExpanded && sanitizedContent && (
+                <div className="article-excerpt expanded">
+                    <div
+                        className="article-body"
+                        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+                    />
+                </div>
+            )}
+
+            {isExpanded && item.link && (
+                <div className="article-actions">
+                    <a
+                        href={item.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="read-more-link"
+                    >
+                        Read full article →
+                    </a>
+                </div>
+            )}
+        </article>
+    );
+});
 
 function Dashboard() {
     const [subscriptions, setSubscriptions] = useState([]);
@@ -11,10 +87,25 @@ function Dashboard() {
     const [loading, setLoading] = useState(false);
     const [selectedFeedId, setSelectedFeedId] = useState(null);
     const [expandedItems, setExpandedItems] = useState(new Set());
+    const [page, setPage] = useState(1);
 
     const [showSettings, setShowSettings] = useState(false);
     const [importStatus, setImportStatus] = useState('');
     const fileInputRef = useRef(null);
+
+    // O(1) feed title lookup instead of O(n) find() called once per rendered item.
+    const subMap = useMemo(
+        () => Object.fromEntries(subscriptions.map(s => [s.id, s.title])),
+        [subscriptions]
+    );
+
+    // Only the slice of items for the current page goes into the DOM.
+    const visibleItems = useMemo(
+        () => items.slice(0, page * PAGE_SIZE),
+        [items, page]
+    );
+
+    const hasMore = visibleItems.length < items.length;
 
     useEffect(() => {
         loadData();
@@ -23,7 +114,7 @@ function Dashboard() {
             if (area === 'sync' && changes.subscriptions) {
                 setSubscriptions(changes.subscriptions.newValue || []);
             }
-            if (area === 'local' && changes.items) {
+            if (area === 'local') {
                 refreshItems();
             }
         };
@@ -32,6 +123,7 @@ function Dashboard() {
     }, []);
 
     useEffect(() => {
+        setPage(1);
         refreshItems();
     }, [selectedFeedId]);
 
@@ -47,15 +139,14 @@ function Dashboard() {
         setItems(allItems);
     };
 
-    const toggleExpand = (itemId) => {
-        const newSet = new Set(expandedItems);
-        if (newSet.has(itemId)) {
-            newSet.delete(itemId);
-        } else {
-            newSet.add(itemId);
-        }
-        setExpandedItems(newSet);
-    };
+    // useCallback makes the reference stable so ArticleItem's React.memo works correctly.
+    const toggleExpand = useCallback((itemId) => {
+        setExpandedItems(prev => {
+            const next = new Set(prev);
+            next.has(itemId) ? next.delete(itemId) : next.add(itemId);
+            return next;
+        });
+    }, []);
 
     const handleAddFeed = async (e) => {
         e.preventDefault();
@@ -115,15 +206,8 @@ function Dashboard() {
         a.click();
     };
 
-    const formatDate = (pubDate) => {
-        if (!pubDate) return '';
-        return new Date(pubDate).toLocaleDateString('en-US', {
-            month: 'short', day: 'numeric', year: 'numeric'
-        });
-    };
-
     const sectionTitle = selectedFeedId
-        ? subscriptions.find(s => s.id === selectedFeedId)?.title
+        ? subMap[selectedFeedId] ?? 'Feed'
         : 'Reading List';
 
     return (
@@ -190,55 +274,23 @@ function Dashboard() {
                         </div>
                     )}
 
-                    {items.map(item => {
-                        const isExpanded = expandedItems.has(item.id);
-                        const feedTitle = subscriptions.find(s => s.id === item.feedId)?.title;
-                        return (
-                            <article
-                                key={item.id}
-                                className={`article-item ${isExpanded ? 'expanded' : ''}`}
-                                onClick={() => toggleExpand(item.id)}
-                            >
-                                <h2 className="article-title">{item.title}</h2>
+                    {visibleItems.map(item => (
+                        <ArticleItem
+                            key={item.id}
+                            item={item}
+                            feedTitle={subMap[item.feedId]}
+                            isExpanded={expandedItems.has(item.id)}
+                            onToggle={toggleExpand}
+                        />
+                    ))}
 
-                                <div className="article-meta">
-                                    {feedTitle && <span className="feed-source">{feedTitle}</span>}
-                                    {feedTitle && item.pubDate && <span className="meta-sep">·</span>}
-                                    {item.pubDate && (
-                                        <time className="article-date">{formatDate(item.pubDate)}</time>
-                                    )}
-                                </div>
-
-                                {item.content && (
-                                    <div className={`article-excerpt ${isExpanded ? 'expanded' : ''}`}>
-                                        <div
-                                            className="article-body"
-                                            dangerouslySetInnerHTML={{
-                                                __html: DOMPurify.sanitize(item.content, {
-                                                    ADD_TAGS: ['img', 'iframe'],
-                                                    ADD_ATTR: ['src', 'width', 'height', 'style']
-                                                })
-                                            }}
-                                        />
-                                    </div>
-                                )}
-
-                                {isExpanded && item.link && (
-                                    <div className="article-actions">
-                                        <a
-                                            href={item.link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="read-more-link"
-                                        >
-                                            Read full article →
-                                        </a>
-                                    </div>
-                                )}
-                            </article>
-                        );
-                    })}
+                    {hasMore && (
+                        <div className="load-more-container">
+                            <button className="load-more-btn" onClick={() => setPage(p => p + 1)}>
+                                Load more — {items.length - visibleItems.length} remaining
+                            </button>
+                        </div>
+                    )}
                 </div>
             </main>
 
