@@ -46,46 +46,58 @@ export async function saveSubscriptions(subscriptions) {
 
 /**
  * Get Items (Articles) from Local Storage
+ * Items are stored per-feed under keys like "items_<feedId>".
  * @param {string} feedId - Optional, filter by feedId
  */
 export async function getItems(feedId = null) {
-    const data = await chrome.storage.local.get([STORAGE_KEYS.ITEMS]);
-    const items = data[STORAGE_KEYS.ITEMS] || {};
-
     if (feedId) {
-        return Object.values(items).filter(item => item.feedId === feedId);
+        const key = `items_${feedId}`;
+        const data = await chrome.storage.local.get([key]);
+        return Object.values(data[key] || {});
     }
-    return Object.values(items);
+
+    // Fetch all subscriptions to know which per-feed keys exist
+    const subs = await getSubscriptions();
+    if (subs.length === 0) return [];
+
+    const keys = subs.map(s => `items_${s.id}`);
+    const data = await chrome.storage.local.get(keys);
+    return keys.flatMap(key => Object.values(data[key] || {}));
 }
 
 /**
  * Save New Items to Local Storage
- * Merges with existing items, keyed by ID.
+ * Reads and writes only the affected feed's key, not the entire items collection.
  */
 export async function saveItems(newItems) {
-    const data = await chrome.storage.local.get([STORAGE_KEYS.ITEMS]);
-    const currentItems = data[STORAGE_KEYS.ITEMS] || {};
+    if (newItems.length === 0) return;
+
+    // Items passed in a single call always share the same feedId
+    const feedId = newItems[0].feedId;
+    const key = `items_${feedId}`;
+    const data = await chrome.storage.local.get([key]);
+    const currentItems = data[key] || {};
 
     newItems.forEach(item => {
-        // Basic deduplication or update logic
         if (!currentItems[item.id]) {
             currentItems[item.id] = item;
         }
     });
 
-    await chrome.storage.local.set({ [STORAGE_KEYS.ITEMS]: currentItems });
+    await chrome.storage.local.set({ [key]: currentItems });
 }
 
 /**
  * Mark Item as Read/Unread
  */
-export async function markItemRead(itemId, isRead = true) {
-    const data = await chrome.storage.local.get([STORAGE_KEYS.ITEMS]);
-    const currentItems = data[STORAGE_KEYS.ITEMS] || {};
+export async function markItemRead(itemId, feedId, isRead = true) {
+    const key = `items_${feedId}`;
+    const data = await chrome.storage.local.get([key]);
+    const currentItems = data[key] || {};
 
     if (currentItems[itemId]) {
         currentItems[itemId].read = isRead;
-        await chrome.storage.local.set({ [STORAGE_KEYS.ITEMS]: currentItems });
+        await chrome.storage.local.set({ [key]: currentItems });
     }
 }
 

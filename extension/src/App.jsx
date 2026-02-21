@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import './App.css'
 
 function App() {
@@ -8,14 +7,13 @@ function App() {
 
   return (
     <div className="app-container">
-      <header>
-        <h1>SimpleReader</h1>
-      </header>
-      <main>
-        <button onClick={openDashboard} style={{ width: '100%', padding: '0.5rem', cursor: 'pointer' }}>
-          Open Reader
-        </button>
-      </main>
+      <div className="popup-masthead">
+        <span className="popup-masthead-name">SimpleReader</span>
+        <span className="popup-masthead-sub">rss · atom · rdf</span>
+      </div>
+      <button className="popup-open-btn" onClick={openDashboard}>
+        Open Reader →
+      </button>
     </div>
   )
 }

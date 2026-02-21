@@ -5,6 +5,14 @@ const parser = new XMLParser({
     attributeNamePrefix: "@_"
 });
 
+// fast-xml-parser returns text nodes with attributes as { "#text": "...", "@_type": "..." }
+// This extracts a plain string in either case.
+function getText(value) {
+    if (!value) return '';
+    if (typeof value === 'object') return value['#text'] || '';
+    return String(value);
+}
+
 /**
  * Fetches and parses an RSS/Atom feed.
  * @param {string} url 
@@ -40,13 +48,13 @@ function parseRSS2(rss) {
     const items = Array.isArray(channel.item) ? channel.item : [channel.item];
 
     return {
-        title: channel.title,
-        description: channel.description,
+        title: getText(channel.title),
+        description: getText(channel.description),
         items: items.map(item => ({
-            id: item.guid?.['#text'] || item.link || item.title, // Fallback ID
-            title: item.title,
+            id: item.guid?.['#text'] || item.link || getText(item.title),
+            title: getText(item.title),
             link: item.link,
-            content: item['content:encoded'] || item.description,
+            content: getText(item['content:encoded'] || item.description),
             pubDate: item.pubDate,
             read: false
         }))
@@ -57,18 +65,18 @@ function parseAtom(feed) {
     const entries = Array.isArray(feed.entry) ? feed.entry : [feed.entry];
 
     return {
-        title: feed.title,
+        title: getText(feed.title),
         items: entries.map(entry => {
             // Atom links can be arrays or objects
             const link = Array.isArray(entry.link)
                 ? entry.link.find(l => l['@_rel'] === 'alternate' || !l['@_rel'])?.['@_href']
-                : entry.link['@_href'];
+                : entry.link?.['@_href'];
 
             return {
-                id: entry.id,
-                title: entry.title,
+                id: getText(entry.id),
+                title: getText(entry.title),
                 link: link,
-                content: entry.content?.['#text'] || entry.summary?.['#text'],
+                content: getText(entry.content || entry.summary),
                 pubDate: entry.updated || entry.published,
                 read: false
             };
@@ -81,12 +89,12 @@ function parseRSS1(rdf) {
     const items = Array.isArray(rdf.item) ? rdf.item : [rdf.item];
 
     return {
-        title: channel.title,
+        title: getText(channel.title),
         items: items.map(item => ({
-            id: item.link || item.title,
-            title: item.title,
+            id: item.link || getText(item.title),
+            title: getText(item.title),
             link: item.link,
-            content: item.description,
+            content: getText(item.description),
             pubDate: item['dc:date'],
             read: false
         }))
