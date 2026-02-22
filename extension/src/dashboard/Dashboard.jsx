@@ -118,6 +118,8 @@ function Dashboard() {
     const [importStatus, setImportStatus] = useState('');
     const fileInputRef = useRef(null);
 
+    const [searchQuery, setSearchQuery] = useState('');
+
     const [lastRefreshedAt, setLastRefreshedAt] = useState(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [, setTickCount] = useState(0);
@@ -130,11 +132,21 @@ function Dashboard() {
 
     // Filter and sort items based on selected feed — all items always loaded for accurate unread counts.
     const displayItems = useMemo(() => {
-        const filtered = selectedFeedId
+        let filtered = selectedFeedId
             ? items.filter(i => i.feedId === selectedFeedId)
             : items;
+
+        if (searchQuery.trim()) {
+            const q = searchQuery.trim().toLowerCase();
+            filtered = filtered.filter(i => {
+                if ((i.title || '').toLowerCase().includes(q)) return true;
+                if (i.content) return stripHtml(i.content).toLowerCase().includes(q);
+                return false;
+            });
+        }
+
         return [...filtered].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-    }, [items, selectedFeedId]);
+    }, [items, selectedFeedId, searchQuery]);
 
     // Per-feed unread counts, computed from full items list.
     const unreadByFeed = useMemo(() => {
@@ -209,6 +221,11 @@ function Dashboard() {
         setPage(1);
         setFocusedIndex(null);
     }, [selectedFeedId]);
+
+    useEffect(() => {
+        setPage(1);
+        setFocusedIndex(null);
+    }, [searchQuery]);
 
     // Keyboard navigation: j/k or arrows to move focus, Enter to expand/collapse.
     useEffect(() => {
@@ -397,6 +414,13 @@ function Dashboard() {
                         <span className="article-count">{displayItems.length} articles</span>
                     )}
                     <div className="header-refresh">
+                        <input
+                            type="search"
+                            className="search-input"
+                            placeholder="Search…"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                         {isRefreshing ? (
                             <span className="last-updated">Refreshing…</span>
                         ) : lastRefreshedAt ? (

@@ -336,6 +336,33 @@
   cursor: not-allowed;
 }
 
+.search-input {
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 0;
+    outline: none;
+    width: 160px;
+    transition: border-color 0.15s, width 0.2s;
+}
+
+.search-input::placeholder {
+    color: var(--ink-light);
+}
+
+.search-input:focus {
+    border-color: var(--ink-mid);
+    width: 220px;
+}
+
+.search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+}
+
 /* Article List */
 
 .article-list {
