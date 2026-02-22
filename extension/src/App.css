@@ -90,6 +90,18 @@
   overflow: hidden;
 }
 
+.masthead-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.masthead-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
 .sidebar-masthead {
   padding: 18px 16px 14px;
   border-bottom: 1px solid var(--sidebar-border);

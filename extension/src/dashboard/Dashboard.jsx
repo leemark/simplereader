@@ -123,6 +123,7 @@ function Dashboard() {
     const [lastRefreshedAt, setLastRefreshedAt] = useState(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [, setTickCount] = useState(0);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     // O(1) feed title lookup instead of O(n) find() called once per rendered item.
     const subMap = useMemo(
@@ -355,7 +356,10 @@ function Dashboard() {
             {/* Sidebar */}
             <aside className="sidebar">
                 <div className="sidebar-masthead">
-                    <span className="masthead-title">SimpleReader</span>
+                    <span className="masthead-brand">
+                        <img src="/icons/icon.svg" className="masthead-icon" alt="" />
+                        <span className="masthead-title">SimpleReader</span>
+                    </span>
                     <button className="settings-btn" onClick={() => setShowSettings(true)} title="Settings">
                         ⚙
                     </button>
