@@ -354,7 +354,7 @@ function Dashboard() {
     return (
         <div className="dashboard-container">
             {/* Sidebar */}
-            <aside className="sidebar">
+            <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
                 <div className="sidebar-masthead">
                     <span className="masthead-brand">
                         <img src="/icons/icon.svg" className="masthead-icon" alt="" />
@@ -382,7 +382,7 @@ function Dashboard() {
                     <ul className="feed-list">
                         <li
                             className={`feed-item ${!selectedFeedId ? 'active' : ''}`}
-                            onClick={() => setSelectedFeedId(null)}
+                            onClick={() => { setSelectedFeedId(null); setSidebarOpen(false); }}
                         >
                             <span className="feed-item-title">All Articles</span>
                             {totalUnread > 0 && <span className="feed-unread">{totalUnread}</span>}
@@ -391,7 +391,7 @@ function Dashboard() {
                             <li
                                 key={sub.id}
                                 className={`feed-item ${selectedFeedId === sub.id ? 'active' : ''}`}
-                                onClick={() => setSelectedFeedId(sub.id)}
+                                onClick={() => { setSelectedFeedId(sub.id); setSidebarOpen(false); }}
                             >
                                 <span className="feed-item-title">{sub.title}</span>
                                 {unreadByFeed[sub.id] > 0 && (
@@ -413,6 +413,13 @@ function Dashboard() {
             {/* Main Content */}
             <main className="main-content">
                 <header className="content-header">
+                    <button
+                        className="menu-btn"
+                        onClick={() => setSidebarOpen(o => !o)}
+                        aria-label="Toggle navigation"
+                    >
+                        ☰
+                    </button>
                     <h1 className="section-title">{sectionTitle}</h1>
                     {displayItems.length > 0 && (
                         <span className="article-count">{displayItems.length} articles</span>
@@ -471,6 +478,13 @@ function Dashboard() {
                     )}
                 </div>
             </main>
+
+            {sidebarOpen && (
+                <div
+                    className="sidebar-backdrop"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
 
             {/* Settings Modal */}
             {showSettings && (
