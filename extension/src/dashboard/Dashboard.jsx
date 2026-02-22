@@ -8,7 +8,10 @@ const PAGE_SIZE = 50;
 
 // Strip HTML tags for collapsed plain-text previews — no DOMPurify needed.
 function stripHtml(html) {
-    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const stripped = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const ta = document.createElement('textarea');
+    ta.innerHTML = stripped;
+    return ta.value;
 }
 
 // Memoized per-article component. Only re-renders when its own props change,
