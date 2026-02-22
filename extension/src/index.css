@@ -30,9 +30,9 @@
   --rule-light:  #1E2228;
 }
 
-[data-fontsize="small"]  { --article-fs: 0.78rem; }
-[data-fontsize="medium"] { --article-fs: 0.88rem; }
-[data-fontsize="large"]  { --article-fs: 1.00rem; }
+[data-fontsize="small"]  { --article-fs: 0.82rem; }
+[data-fontsize="medium"] { --article-fs: 1.00rem; }
+[data-fontsize="large"]  { --article-fs: 1.15rem; }
 
 * {
   box-sizing: border-box;
