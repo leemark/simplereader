@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimpleReader — Local RSS Reader</title>
+  <meta name="description" content="Privacy-focused, local-first RSS reader for Chrome. No account required. All data stays in your browser." />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #F0E8D4;
+      --ink: #18110A;
+      --ink-light: #4A3F35;
+      --navy: #111520;
+      --navy-light: #1E2435;
+      --red: #C42020;
+      --red-light: #e03030;
+      --border: #D4C9B0;
+      --shadow: rgba(24,17,10,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--cream);
+      color: var(--ink);
+      line-height: 1.7;
+      font-size: 17px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      color: #e8e2d6;
+      border-top: 3px solid var(--red);
+      padding: 3rem 1.5rem 3.5rem;
+      text-align: center;
+    }
+
+    .header-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 1.25rem;
+      display: block;
+    }
+
+    header h1 {
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #f5f0e8;
+      margin-bottom: 0.5rem;
+    }
+
+    header .tagline {
+      font-size: 1.15rem;
+      color: #a09080;
+      margin-bottom: 2rem;
+      font-style: italic;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--red);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.75rem 1.75rem;
+      font-size: 1rem;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-primary:hover { background: var(--red-light); }
+
+    .btn-secondary {
+      background: transparent;
+      color: #c8bfb0;
+      text-decoration: none;
+      padding: 0.75rem 1.75rem;
+      font-size: 1rem;
+      font-family: inherit;
+      border: 1px solid #3a4055;
+      transition: border-color 0.15s, color 0.15s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-secondary:hover {
+      border-color: #6070a0;
+      color: #e0d8cc;
+    }
+
+    /* ── Layout ── */
+    main { max-width: 760px; margin: 0 auto; padding: 0 1.5rem; }
+
+    section { padding: 3.5rem 0; border-bottom: 1px solid var(--border); }
+    section:last-of-type { border-bottom: none; }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    /* ── Features grid ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 560px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+
+    .feature-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      padding: 1.25rem 1.375rem;
+      box-shadow: 0 1px 4px var(--shadow);
+    }
+
+    .feature-card .glyph {
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+      display: block;
+      color: var(--red);
+    }
+
+    .feature-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      color: var(--ink);
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--ink-light);
+      line-height: 1.55;
+    }
+
+    /* ── Screenshot ── */
+    .screenshot-placeholder {
+      background: var(--navy-light);
+      border: 1px solid #2a3050;
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #60708a;
+      font-style: italic;
+      font-size: 0.95rem;
+    }
+
+    .screenshot-placeholder img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ── Privacy callout ── */
+    .privacy-callout {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--red);
+      padding: 1.5rem 1.75rem;
+      box-shadow: 0 1px 4px var(--shadow);
+    }
+
+    .privacy-callout p { margin-bottom: 0.75rem; color: var(--ink-light); }
+    .privacy-callout p:last-child { margin-bottom: 0; }
+    .privacy-callout a { color: var(--red); text-decoration: none; }
+    .privacy-callout a:hover { text-decoration: underline; }
+
+    /* ── Install steps ── */
+    .install-steps { list-style: none; counter-reset: steps; }
+
+    .install-steps li {
+      counter-increment: steps;
+      padding: 0.6rem 0 0.6rem 2.5rem;
+      position: relative;
+      border-bottom: 1px solid var(--border);
+      color: var(--ink-light);
+    }
+
+    .install-steps li:last-child { border-bottom: none; }
+
+    .install-steps li::before {
+      content: counter(steps);
+      position: absolute;
+      left: 0;
+      top: 0.6rem;
+      background: var(--navy);
+      color: #e0d8cc;
+      width: 1.6rem;
+      height: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-family: monospace;
+    }
+
+    code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.88em;
+      background: rgba(24,17,10,0.07);
+      padding: 0.1em 0.35em;
+      border-radius: 2px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--navy);
+      color: #6070a0;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      font-size: 0.9rem;
+      border-top: 3px solid var(--red);
+    }
+
+    footer a {
+      color: #8090c0;
+      text-decoration: none;
+      margin: 0 0.75rem;
+      transition: color 0.15s;
+    }
+
+    footer a:hover { color: #c8bfb0; }
+
+    .footer-links { margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="icons/icon.svg" alt="SimpleReader icon" class="header-icon" />
+    <h1>SimpleReader</h1>
+    <p class="tagline">Privacy-focused, local-first RSS reader for Chrome. No account required.</p>
+    <div class="cta-group">
+      <a href="#install" class="btn-primary">Add to Chrome</a>
+      <a href="https://github.com/leemark/simplereader" class="btn-secondary">View on GitHub</a>
+    </div>
+  </header>
+
+  <main>
+
+    <section id="features">
+      <h2>Features</h2>
+      <div class="features-grid">
+
+        <div class="feature-card">
+          <span class="glyph">⊙</span>
+          <h3>All major feed formats</h3>
+          <p>Reads RSS 2.0, Atom, and RSS 1.0 (RDF) feeds — the full range of formats in use today.</p>
+        </div>
+
+        <div class="feature-card">
+          <span class="glyph">⬛</span>
+          <h3>Stays in your browser</h3>
+          <p>All articles and subscriptions are stored locally in Chrome. Nothing is sent to any external server.</p>
+        </div>
+
+        <div class="feature-card">
+          <span class="glyph">↔</span>
+          <h3>Cross-device sync</h3>
+          <p>Subscriptions and settings sync across your devices via Chrome Sync — no separate account needed.</p>
+        </div>
+
+        <div class="feature-card">
+          <span class="glyph">✦</span>
+          <h3>OPML import &amp; export</h3>
+          <p>Bring your existing subscriptions in via OPML, or export any time. No lock-in.</p>
+        </div>
+
+        <div class="feature-card">
+          <span class="glyph">◑</span>
+          <h3>Dark mode &amp; font size</h3>
+          <p>Toggle dark mode and choose from three font sizes. Reads comfortably in any light.</p>
+        </div>
+
+        <div class="feature-card">
+          <span class="glyph">✎</span>
+          <h3>Full-text search</h3>
+          <p>Search across all loaded articles instantly — no index, no delay.</p>
+        </div>
+
+        <div class="feature-card">
+          <span class="glyph">⌨</span>
+          <h3>Keyboard navigation</h3>
+          <p>Use <kbd>j</kbd>/<kbd>k</kbd> or arrow keys to move between articles, <kbd>Enter</kbd> to expand.</p>
+        </div>
+
+        <div class="feature-card">
+          <span class="glyph">⚡</span>
+          <h3>Efficient fetching</h3>
+          <p>Conditional HTTP requests with ETag and Last-Modified headers avoid re-downloading unchanged feeds.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="screenshot">
+      <h2>Screenshot</h2>
+      <div class="screenshot-placeholder">
+        <img src="screenshot.png" alt="SimpleReader dashboard showing feed list and articles" />
+      </div>
+    </section>
+
+    <section id="privacy-section">
+      <h2>Privacy First</h2>
+      <div class="privacy-callout">
+        <p>SimpleReader collects <strong>zero data</strong>. There are no analytics, no tracking pixels, no accounts, and no external servers. Your subscriptions and articles never leave your browser.</p>
+        <p>RSS feeds are fetched directly from the source domains — the same request your browser would make if you visited the site directly.</p>
+        <p><a href="privacy.html">Read the full Privacy Policy &rarr;</a></p>
+      </div>
+    </section>
+
+    <section id="install">
+      <h2>Installation</h2>
+      <p style="margin-bottom:1.25rem; color:var(--ink-light);">A Chrome Web Store listing is coming soon. In the meantime, you can load SimpleReader directly from source:</p>
+      <ol class="install-steps">
+        <li>Clone the repository: <code>git clone https://github.com/leemark/simplereader.git</code></li>
+        <li>Install dependencies and build: <code>cd simplereader/extension &amp;&amp; npm install &amp;&amp; npm run build</code></li>
+        <li>Open <code>chrome://extensions</code> in Chrome and enable <strong>Developer Mode</strong></li>
+        <li>Click <strong>"Load unpacked"</strong> and select the <code>extension/dist/</code> folder</li>
+      </ol>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <a href="https://github.com/leemark/simplereader">GitHub</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <div>SimpleReader &mdash; MIT License &mdash; &copy; 2026 Mark Lee</div>
+  </footer>
+
+</body>
+</html>

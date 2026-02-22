@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Dark navy background, sharp corners to match the app -->
+  <rect width="128" height="128" rx="0" fill="#111520"/>
+  <!-- Red accent bar at top — mirrors the ::before stripe on .app-container -->
+  <rect x="0" y="0" width="128" height="3" fill="#C42020"/>
+  <!-- RSS origin dot -->
+  <circle cx="28" cy="100" r="9" fill="#C42020"/>
+  <!-- RSS quarter-circle arcs: origin at (28,100), sweeping from top to right -->
+  <path d="M28 72 A28 28 0 0 1 56 100"  fill="none" stroke="#C42020" stroke-width="9"/>
+  <path d="M28 49 A51 51 0 0 1 79 100"  fill="none" stroke="#C42020" stroke-width="9"/>
+  <path d="M28 26 A74 74 0 0 1 102 100" fill="none" stroke="#C42020" stroke-width="9"/>
+</svg>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — SimpleReader</title>
+  <meta name="description" content="SimpleReader privacy policy. SimpleReader collects no personal data. All data stays in your browser." />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #F0E8D4;
+      --ink: #18110A;
+      --ink-light: #4A3F35;
+      --navy: #111520;
+      --navy-light: #1E2435;
+      --red: #C42020;
+      --border: #D4C9B0;
+      --shadow: rgba(24,17,10,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--cream);
+      color: var(--ink);
+      line-height: 1.75;
+      font-size: 17px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      color: #e8e2d6;
+      border-top: 3px solid var(--red);
+      padding: 2.25rem 1.5rem 2.5rem;
+      text-align: center;
+    }
+
+    .header-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    header img { width: 40px; height: 40px; }
+
+    header a {
+      color: #a09080;
+      text-decoration: none;
+      font-size: 0.95rem;
+      display: block;
+      margin-top: 0.25rem;
+    }
+
+    header a:hover { color: #c8bfb0; }
+
+    header h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #f5f0e8;
+    }
+
+    header p.subtitle {
+      font-size: 0.95rem;
+      color: #a09080;
+      margin-top: 0.4rem;
+      font-style: italic;
+    }
+
+    /* ── Layout ── */
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    section {
+      margin-bottom: 2.75rem;
+    }
+
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    p { margin-bottom: 0.9rem; color: var(--ink-light); }
+    p:last-child { margin-bottom: 0; }
+
+    ul {
+      margin: 0.5rem 0 0.9rem 1.4rem;
+      color: var(--ink-light);
+    }
+
+    ul li { margin-bottom: 0.35rem; }
+
+    a { color: var(--red); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Permissions table ── */
+    .perms-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+      font-size: 0.92rem;
+    }
+
+    .perms-table th {
+      background: var(--navy);
+      color: #c8bfb0;
+      padding: 0.55rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 0.03em;
+    }
+
+    .perms-table td {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--ink-light);
+      vertical-align: top;
+    }
+
+    .perms-table tr:last-child td { border-bottom: none; }
+
+    .perms-table tr:nth-child(even) td { background: rgba(24,17,10,0.04); }
+
+    code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.87em;
+      background: rgba(24,17,10,0.07);
+      padding: 0.1em 0.35em;
+      border-radius: 2px;
+    }
+
+    /* ── Summary box ── */
+    .summary-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--red);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2.75rem;
+      box-shadow: 0 1px 4px var(--shadow);
+    }
+
+    .summary-box p {
+      font-size: 1.05rem;
+      font-style: italic;
+    }
+
+    /* ── Effective date ── */
+    .effective-date {
+      font-size: 0.88rem;
+      color: #8a7b6e;
+      margin-bottom: 2rem;
+    }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--navy);
+      color: #6070a0;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      font-size: 0.9rem;
+      border-top: 3px solid var(--red);
+    }
+
+    footer a {
+      color: #8090c0;
+      text-decoration: none;
+      margin: 0 0.75rem;
+      transition: color 0.15s;
+    }
+
+    footer a:hover { color: #c8bfb0; }
+    .footer-links { margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <a href="index.html">
+        <img src="icons/icon.svg" alt="SimpleReader icon" />
+        <span>← SimpleReader</span>
+      </a>
+      <div>
+        <h1>Privacy Policy</h1>
+        <p class="subtitle">The short version: we collect nothing.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <p class="effective-date">Effective date: February 2026</p>
+
+    <div class="summary-box">
+      <p>SimpleReader does not collect, store, transmit, or sell any personal data. All information stays in your browser.</p>
+    </div>
+
+    <section id="overview">
+      <h2>1. Overview</h2>
+      <p>SimpleReader is a browser extension for Chrome that lets you subscribe to and read RSS, Atom, and RDF feeds. It runs entirely within your browser. There is no server component, no user account system, and no data collection of any kind.</p>
+    </section>
+
+    <section id="data-collection">
+      <h2>2. Data Collection</h2>
+      <p>SimpleReader collects <strong>no personal data</strong>. Specifically:</p>
+      <ul>
+        <li>No analytics or telemetry</li>
+        <li>No crash reports sent to any server</li>
+        <li>No tracking pixels or fingerprinting</li>
+        <li>No account creation or login</li>
+        <li>No cookies set on external sites</li>
+        <li>No data sold or shared with any third party</li>
+      </ul>
+    </section>
+
+    <section id="how-it-works">
+      <h2>3. How It Works</h2>
+      <p>When you add a feed, SimpleReader's background service worker fetches the feed URL directly from your browser — exactly as if you had navigated to it yourself. The fetched articles are parsed locally and stored in Chrome's built-in storage APIs.</p>
+      <p>Feeds are refreshed periodically (every 30 minutes by default) in the background. Conditional HTTP headers (ETag and Last-Modified) are used to avoid re-downloading unchanged feeds.</p>
+      <p>No intermediary server is involved at any point.</p>
+    </section>
+
+    <section id="data-storage">
+      <h2>4. Data Storage</h2>
+      <p>All data is stored using Chrome's built-in storage APIs:</p>
+      <ul>
+        <li><strong><code>chrome.storage.sync</code></strong> — Your feed subscriptions (URLs and titles) and settings (dark mode, font size, etc.). Chrome may sync this across your signed-in devices under <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</li>
+        <li><strong><code>chrome.storage.local</code></strong> — Article content (items are stored locally only and are not synced). This storage is larger and holds the actual article items keyed by ID.</li>
+      </ul>
+      <p>Data never leaves your browser except through Chrome's own sync mechanism (if you are signed into Chrome and sync is enabled).</p>
+      <p>You can clear all SimpleReader data at any time by removing the extension or clearing extension storage in Chrome settings.</p>
+    </section>
+
+    <section id="permissions">
+      <h2>5. Permissions Explained</h2>
+      <p>SimpleReader requests only the permissions necessary for it to function:</p>
+      <table class="perms-table">
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Why it's needed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>storage</code></td>
+            <td>Required to read and write subscriptions, settings, and article data using Chrome's storage APIs.</td>
+          </tr>
+          <tr>
+            <td><code>unlimitedStorage</code></td>
+            <td>The default storage quota is small. Unlimited storage lets you hold a reasonable article backlog without hitting limits.</td>
+          </tr>
+          <tr>
+            <td><code>alarms</code></td>
+            <td>Used to schedule the periodic background feed refresh (every 30 minutes by default).</td>
+          </tr>
+          <tr>
+            <td><code>host_permissions: *://*/*</code></td>
+            <td>RSS feeds are served from arbitrary domains chosen by the user. This permission allows fetching feeds from any domain you subscribe to — it is not used to access any site you haven't explicitly subscribed to.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="third-party">
+      <h2>6. Third-Party Services</h2>
+      <p>SimpleReader uses no third-party services. Feeds are fetched directly from the source domain you subscribe to. This is the same network request your browser would make if you visited that URL directly — SimpleReader simply parses the response locally.</p>
+      <p>The source domains of the feeds you subscribe to will receive HTTP requests with your browser's standard headers (IP address, User-Agent). SimpleReader has no control over, and takes no responsibility for, the privacy practices of those external sites.</p>
+    </section>
+
+    <section id="changes">
+      <h2>7. Changes to This Policy</h2>
+      <p>If this privacy policy changes materially, the updated version will be posted here with a new effective date. Given the nature of SimpleReader (no data collection, no server), significant changes are unlikely.</p>
+      <p>Continued use of the extension after a policy update constitutes acceptance of the new policy.</p>
+    </section>
+
+    <section id="contact">
+      <h2>8. Contact</h2>
+      <p>Questions or concerns? Open an issue on the <a href="https://github.com/leemark/simplereader/issues" target="_blank" rel="noopener">GitHub repository</a>.</p>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="https://github.com/leemark/simplereader">GitHub</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <div>SimpleReader &mdash; MIT License &mdash; &copy; 2026 Mark Lee</div>
+  </footer>
+
+</body>
+</html>
