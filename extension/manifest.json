@@ -6,9 +6,7 @@
   "permissions": [
     "storage",
     "unlimitedStorage",
-    "alarms",
-    "activeTab",
-    "scripting"
+    "alarms"
   ],
   "host_permissions": [
     "*://*/*"

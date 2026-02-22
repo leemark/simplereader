@@ -116,6 +116,23 @@ export async function markItemRead(itemId, feedId, isRead = true) {
 }
 
 /**
+ * Get all cached HTTP validators (ETag / Last-Modified) for every feed.
+ * Returns a plain object keyed by feedId: { [feedId]: { etag, lastModified } }
+ */
+export async function getFeedValidators() {
+    const data = await chrome.storage.local.get([STORAGE_KEYS.FEED_META]);
+    return data[STORAGE_KEYS.FEED_META] || {};
+}
+
+/**
+ * Persist the full validators map in a single write.
+ * @param {{ [feedId]: { etag: string|null, lastModified: string|null } }} validators
+ */
+export async function saveFeedValidators(validators) {
+    await chrome.storage.local.set({ [STORAGE_KEYS.FEED_META]: validators });
+}
+
+/**
  * Get the ISO timestamp of the last successful feed refresh from Local Storage
  */
 export async function getLastRefreshed() {

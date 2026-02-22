@@ -6,7 +6,8 @@ import {
     getItems,
     getLastRefreshed,
     getSettings, saveSettings,
-    markItemRead
+    markItemRead,
+    getFeedValidators
 } from '../utils/storage';
 import { parseOPML, generateOPML } from '../utils/opml';
 
@@ -46,8 +47,8 @@ const ArticleItem = React.memo(function ArticleItem({ item, feedTitle, isExpande
     const sanitizedContent = useMemo(() => {
         if (!isExpanded || !item.content) return null;
         return DOMPurify.sanitize(item.content, {
-            ADD_TAGS: ['img', 'iframe'],
-            ADD_ATTR: ['src', 'width', 'height', 'style']
+            ADD_TAGS: ['img'],
+            ADD_ATTR: ['src', 'width', 'height', 'alt']
         });
     }, [isExpanded, item.content]);
 
@@ -122,7 +123,8 @@ function Dashboard() {
 
     const [lastRefreshedAt, setLastRefreshedAt] = useState(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [, setTickCount] = useState(0);
+    const [feedMeta, setFeedMeta] = useState({});
+    const [now, setNow] = useState(() => Date.now());
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     // O(1) feed title lookup instead of O(n) find() called once per rendered item.
@@ -174,6 +176,18 @@ function Dashboard() {
 
     const hasMore = visibleItems.length < displayItems.length;
 
+    // Relative time label — recomputed when the timestamp or the per-minute tick changes.
+    const relativeTimeLabel = useMemo(() => {
+        if (!lastRefreshedAt) return null;
+        const diffMs = now - new Date(lastRefreshedAt).getTime();
+        const diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 1) return 'just now';
+        if (diffMin < 60) return `${diffMin} min ago`;
+        const diffHr = Math.floor(diffMin / 60);
+        if (diffHr < 24) return `${diffHr}h ago`;
+        return `${Math.floor(diffHr / 24)}d ago`;
+    }, [lastRefreshedAt, now]);
+
     // useCallback makes the reference stable so ArticleItem's React.memo works correctly.
     const toggleExpand = useCallback((itemId, feedId) => {
         setExpandedItems(prev => {
@@ -193,8 +207,24 @@ function Dashboard() {
         await saveSubscriptions(updated);
     }, [subscriptions]);
 
+    const refreshItems = useCallback(async () => {
+        const allItems = await getItems();
+        setItems(allItems);
+    }, []);
+
     useEffect(() => {
-        loadData();
+        async function init() {
+            const [subs, ts, cfg, meta] = await Promise.all([
+                getSubscriptions(), getLastRefreshed(), getSettings(), getFeedValidators()
+            ]);
+            setSubscriptions(subs);
+            setLastRefreshedAt(ts);
+            setSettings(cfg);
+            setFeedMeta(meta);
+            applyAppearance(cfg);
+            refreshItems();
+        }
+        init();
 
         const handleStorageChange = (changes, area) => {
             if (area === 'sync' && changes.subscriptions) {
@@ -204,33 +234,30 @@ function Dashboard() {
                 if (changes.lastRefreshedAt) {
                     setLastRefreshedAt(changes.lastRefreshedAt.newValue || null);
                 }
+                if (changes.feedMeta) {
+                    setFeedMeta(changes.feedMeta.newValue || {});
+                }
                 refreshItems();
             }
         };
         chrome.storage.onChanged.addListener(handleStorageChange);
 
         // Tick every minute so the relative-time label stays current
-        const ticker = setInterval(() => setTickCount(n => n + 1), 60000);
+        const ticker = setInterval(() => setNow(Date.now()), 60000);
 
         return () => {
             chrome.storage.onChanged.removeListener(handleStorageChange);
             clearInterval(ticker);
         };
-    }, []);
+    }, [refreshItems]);
 
-    useEffect(() => {
-        setPage(1);
-        setFocusedIndex(null);
-    }, [selectedFeedId]);
-
-    useEffect(() => {
-        setPage(1);
-        setFocusedIndex(null);
-    }, [searchQuery]);
-
-    // Keyboard navigation: j/k or arrows to move focus, Enter to expand/collapse.
+    // Keyboard navigation: j/k or arrows to move focus, Enter to expand/collapse, Escape to close modal.
     useEffect(() => {
         const handler = (e) => {
+            if (e.key === 'Escape') {
+                setShowSettings(false);
+                return;
+            }
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
             if (e.key === 'j' || e.key === 'ArrowDown') {
                 e.preventDefault();
@@ -247,38 +274,11 @@ function Dashboard() {
         return () => document.removeEventListener('keydown', handler);
     }, [focusedIndex, visibleItems, toggleExpand]);
 
-    const loadData = async () => {
-        const [subs, ts, cfg] = await Promise.all([
-            getSubscriptions(), getLastRefreshed(), getSettings()
-        ]);
-        setSubscriptions(subs);
-        setLastRefreshedAt(ts);
-        setSettings(cfg);
-        applyAppearance(cfg);
-        refreshItems();
-    };
-
     const handleSaveSettings = async (patch) => {
         const updated = { ...settings, ...patch };
         setSettings(updated);
         await saveSettings(updated);
         applyAppearance(updated);
-    };
-
-    const refreshItems = async () => {
-        const allItems = await getItems();
-        setItems(allItems);
-    };
-
-    const relativeTime = (isoTs) => {
-        if (!isoTs) return null;
-        const diffMs = Date.now() - new Date(isoTs).getTime();
-        const diffMin = Math.floor(diffMs / 60000);
-        if (diffMin < 1) return 'just now';
-        if (diffMin < 60) return `${diffMin} min ago`;
-        const diffHr = Math.floor(diffMin / 60);
-        if (diffHr < 24) return `${diffHr}h ago`;
-        return `${Math.floor(diffHr / 24)}d ago`;
     };
 
     const handleManualRefresh = () => {
@@ -338,7 +338,7 @@ function Dashboard() {
     };
 
     const handleExportOPML = () => {
-        const xml = generateOPML(subscriptions);
+        const xml = generateOPML(subscriptions, feedMeta);
         const blob = new Blob([xml], { type: 'text/xml' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -347,9 +347,18 @@ function Dashboard() {
         a.click();
     };
 
+    const selectFeed = (feedId) => {
+        setSelectedFeedId(feedId);
+        setSidebarOpen(false);
+        setPage(1);
+        setFocusedIndex(null);
+    };
+
     const sectionTitle = selectedFeedId
         ? subMap[selectedFeedId] ?? 'Feed'
         : 'Reading List';
+
+    const siteLink = selectedFeedId ? (feedMeta[selectedFeedId]?.siteLink ?? null) : null;
 
     return (
         <div className="dashboard-container">
@@ -360,7 +369,12 @@ function Dashboard() {
                         <img src="/icons/icon.svg" className="masthead-icon" alt="" />
                         <span className="masthead-title">SimpleReader</span>
                     </span>
-                    <button className="settings-btn" onClick={() => setShowSettings(true)} title="Settings">
+                    <button
+                        className="settings-btn"
+                        onClick={() => setShowSettings(true)}
+                        title="Settings"
+                        aria-label="Settings"
+                    >
                         ⚙
                     </button>
                 </div>
@@ -382,7 +396,10 @@ function Dashboard() {
                     <ul className="feed-list">
                         <li
                             className={`feed-item ${!selectedFeedId ? 'active' : ''}`}
-                            onClick={() => { setSelectedFeedId(null); setSidebarOpen(false); }}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => selectFeed(null)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectFeed(null); }}
                         >
                             <span className="feed-item-title">All Articles</span>
                             {totalUnread > 0 && <span className="feed-unread">{totalUnread}</span>}
@@ -391,7 +408,10 @@ function Dashboard() {
                             <li
                                 key={sub.id}
                                 className={`feed-item ${selectedFeedId === sub.id ? 'active' : ''}`}
-                                onClick={() => { setSelectedFeedId(sub.id); setSidebarOpen(false); }}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => selectFeed(sub.id)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectFeed(sub.id); }}
                             >
                                 <span className="feed-item-title">{sub.title}</span>
                                 {unreadByFeed[sub.id] > 0 && (
@@ -401,6 +421,7 @@ function Dashboard() {
                                     className={`feed-item-star ${sub.starred ? 'starred' : ''}`}
                                     onClick={(e) => { e.stopPropagation(); toggleStar(sub.id); }}
                                     title={sub.starred ? 'Unpin' : 'Pin to top'}
+                                    aria-label={sub.starred ? 'Unstar feed' : 'Star feed'}
                                 >
                                     {sub.starred ? '★' : '☆'}
                                 </button>
@@ -420,7 +441,19 @@ function Dashboard() {
                     >
                         ☰
                     </button>
-                    <h1 className="section-title">{sectionTitle}</h1>
+                    <h1 className="section-title">
+                        {siteLink ? (
+                            <a
+                                href={siteLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="section-title-link"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                {sectionTitle}
+                            </a>
+                        ) : sectionTitle}
+                    </h1>
                     {displayItems.length > 0 && (
                         <span className="article-count">{displayItems.length} articles</span>
                     )}
@@ -430,18 +463,20 @@ function Dashboard() {
                             className="search-input"
                             placeholder="Search…"
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); setFocusedIndex(null); }}
+                            aria-label="Search articles"
                         />
                         {isRefreshing ? (
                             <span className="last-updated">Refreshing…</span>
-                        ) : lastRefreshedAt ? (
-                            <span className="last-updated">Updated {relativeTime(lastRefreshedAt)}</span>
+                        ) : relativeTimeLabel ? (
+                            <span className="last-updated">Updated {relativeTimeLabel}</span>
                         ) : null}
                         <button
                             className="refresh-btn"
                             onClick={handleManualRefresh}
                             disabled={isRefreshing}
                             title="Refresh feeds"
+                            aria-label="Refresh feeds"
                         >
                             ↻
                         </button>
@@ -482,6 +517,7 @@ function Dashboard() {
             {sidebarOpen && (
                 <div
                     className="sidebar-backdrop"
+                    aria-hidden="true"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
@@ -489,10 +525,22 @@ function Dashboard() {
             {/* Settings Modal */}
             {showSettings && (
                 <div className="modal-overlay" onClick={() => setShowSettings(false)}>
-                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                    <div
+                        className="modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="settings-title"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="modal-header">
-                            <h2 className="modal-title">Settings</h2>
-                            <button className="modal-close" onClick={() => setShowSettings(false)}>✕</button>
+                            <h2 className="modal-title" id="settings-title">Settings</h2>
+                            <button
+                                className="modal-close"
+                                onClick={() => setShowSettings(false)}
+                                aria-label="Close settings"
+                            >
+                                ✕
+                            </button>
                         </div>
 
                         <section className="modal-section">

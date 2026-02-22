@@ -51,9 +51,10 @@ export function parseOPML(xmlContent) {
 
 /**
  * Generates OPML string from subscriptions
- * @param {Array} subscriptions 
+ * @param {Array} subscriptions
+ * @param {Object} feedMeta
  */
-export function generateOPML(subscriptions) {
+export function generateOPML(subscriptions, feedMeta = {}) {
     const opmlObj = {
         opml: {
             "@_version": "2.0",
@@ -69,7 +70,7 @@ export function generateOPML(subscriptions) {
                         "@_title": sub.title,
                         "@_type": "rss",
                         "@_xmlUrl": sub.url,
-                        "@_htmlUrl": sub.url // simplified
+                        "@_htmlUrl": feedMeta[sub.id]?.siteLink || sub.url
                     }))
                 }
             }

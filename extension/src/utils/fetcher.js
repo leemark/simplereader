@@ -15,34 +15,58 @@ function getText(value) {
 
 /**
  * Fetches and parses an RSS/Atom feed.
- * @param {string} url 
- * @returns {Promise<{title: string, items: Array}>} - Normalized feed object
+ *
+ * Supports conditional requests: pass cached `etag` and/or `lastModified` from
+ * a previous response and the server may reply with 304 Not Modified, in which
+ * case this function returns `null` (no body, nothing changed).
+ *
+ * @param {string} url
+ * @param {{ etag?: string|null, lastModified?: string|null }} [validators]
+ * @returns {Promise<{title: string, items: Array, etag: string|null, lastModified: string|null} | null>}
  */
-export async function fetchFeed(url) {
+export async function fetchFeed(url, { etag, lastModified } = {}) {
+    const parsed = new URL(url);
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new Error('Only http/https feed URLs are supported');
+    }
+
     try {
+        const headers = {};
+        if (etag)         headers['If-None-Match'] = etag;
+        if (lastModified) headers['If-Modified-Since'] = lastModified;
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         let response;
         try {
-            response = await fetch(url, { signal: controller.signal });
+            response = await fetch(url, { signal: controller.signal, headers });
         } finally {
             clearTimeout(timeoutId);
         }
+
+        if (response.status === 304) return null;
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const xmlText = await response.text();
         const result = parser.parse(xmlText);
 
+        let feed;
         // Normalize RSS vs Atom
         if (result.rss) {
-            return parseRSS2(result.rss);
+            feed = parseRSS2(result.rss);
         } else if (result.feed) {
-            return parseAtom(result.feed);
+            feed = parseAtom(result.feed);
         } else if (result['rdf:RDF']) {
-            return parseRSS1(result['rdf:RDF']);
+            feed = parseRSS1(result['rdf:RDF']);
         } else {
             throw new Error('Unknown feed format');
         }
+
+        return {
+            ...feed,
+            etag: response.headers.get('ETag'),
+            lastModified: response.headers.get('Last-Modified'),
+        };
 
     } catch (error) {
         console.error('Feed fetch error:', error);
@@ -57,6 +81,7 @@ function parseRSS2(rss) {
     return {
         title: getText(channel.title),
         description: getText(channel.description),
+        siteLink: channel.link || null,
         items: items.map(item => ({
             id: item.guid?.['#text'] || item.link || getText(item.title),
             title: getText(item.title),
@@ -71,8 +96,13 @@ function parseRSS2(rss) {
 function parseAtom(feed) {
     const entries = Array.isArray(feed.entry) ? feed.entry : [feed.entry];
 
+    const siteLink = Array.isArray(feed.link)
+        ? (feed.link.find(l => l['@_rel'] === 'alternate' || !l['@_rel'])?.['@_href'] ?? null)
+        : (feed.link?.['@_href'] ?? null);
+
     return {
         title: getText(feed.title),
+        siteLink,
         items: entries.map(entry => {
             // Atom links can be arrays or objects
             const link = Array.isArray(entry.link)
@@ -97,6 +127,7 @@ function parseRSS1(rdf) {
 
     return {
         title: getText(channel.title),
+        siteLink: channel.link || null,
         items: items.map(item => ({
             id: item.link || getText(item.title),
             title: getText(item.title),
