@@ -20,6 +20,20 @@
   --font-body:    'Lora', Georgia, serif;
 }
 
+[data-theme="dark"] {
+  --paper:       #0F1218;
+  --paper-alt:   #161C24;
+  --ink:         #C8C0B0;
+  --ink-mid:     #8A8070;
+  --ink-light:   #5A5448;
+  --rule:        #252830;
+  --rule-light:  #1E2228;
+}
+
+[data-fontsize="small"]  { --article-fs: 0.78rem; }
+[data-fontsize="medium"] { --article-fs: 0.88rem; }
+[data-fontsize="large"]  { --article-fs: 1.00rem; }
+
 * {
   box-sizing: border-box;
 }

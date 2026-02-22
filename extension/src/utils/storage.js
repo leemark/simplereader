@@ -18,6 +18,7 @@ export async function getSettings() {
     return data[STORAGE_KEYS.SETTINGS] || {
         refreshInterval: 30, // minutes
         theme: 'system',
+        fontSize: 'medium',
         showUnreadOnly: false
     };
 }

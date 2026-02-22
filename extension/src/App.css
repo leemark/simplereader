@@ -197,17 +197,57 @@
 }
 
 .feed-item {
-  padding: 7px 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 8px 7px 16px;
   font-family: var(--font-mono);
   font-size: 0.68rem;
   color: var(--sidebar-text);
   cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   border-left: 2px solid transparent;
   transition: color 0.12s, background 0.12s, border-color 0.12s;
 }
+
+.feed-item-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-item-star {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: #3A4258;
+  font-size: 0.72rem;
+  padding: 0 2px;
+  width: auto;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.12s, color 0.12s;
+}
+
+.feed-item:hover .feed-item-star,
+.feed-item-star.starred {
+  opacity: 1;
+}
+
+.feed-item-star.starred { color: #C4A840; }
+.feed-item-star:hover   { color: #C4A840 !important; }
+
+.feed-unread {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: #3A4258;
+  letter-spacing: 0.02em;
+}
+
+.feed-item.active .feed-unread { color: rgba(216, 96, 96, 0.6); }
 
 .feed-item:hover {
   color: var(--sidebar-hover);
@@ -382,7 +422,7 @@
 /* Collapsed plain-text preview */
 .article-preview {
     font-family: var(--font-body);
-    font-size: 0.88rem;
+    font-size: var(--article-fs, 0.88rem);
     line-height: 1.65;
     color: var(--ink-mid);
     margin: 0;
@@ -433,9 +473,14 @@
   -webkit-mask-image: none;
 }
 
+.article-item.focused {
+  outline: 1px solid var(--rule);
+  outline-offset: -1px;
+}
+
 .article-body {
   font-family: var(--font-body);
-  font-size: 0.88rem;
+  font-size: var(--article-fs, 0.88rem);
   line-height: 1.75;
   color: var(--ink-mid);
   overflow-wrap: break-word;
