@@ -11,7 +11,6 @@
   "host_permissions": [
     "*://*/*"
   ],
-  "optional_host_permissions": [],
   "background": {
     "service_worker": "src/background/index.js",
     "type": "module"
