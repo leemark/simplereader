@@ -3,8 +3,7 @@
 Privacy-focused, local-first RSS reader. No account required.
 
 [![GitHub Pages](https://img.shields.io/badge/docs-leemark.github.io%2Fsimplereader-blue)](https://leemark.github.io/simplereader/)
-
-> **Chrome Web Store listing coming soon.**
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-install-4285F4?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/simplereader-local-rss/icenfcokggjpkcdcadgkpbbaiokfmgjg)
 
 ---
 
@@ -24,9 +23,9 @@ Privacy-focused, local-first RSS reader. No account required.
 
 ## Installation
 
-### Chrome Web Store *(coming soon)*
+### Chrome Web Store
 
-A listing will be available once submitted for review.
+Install directly from the [Chrome Web Store](https://chromewebstore.google.com/detail/simplereader-local-rss/icenfcokggjpkcdcadgkpbbaiokfmgjg).
 
 ### Load from source
 
