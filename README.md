@@ -40,6 +40,12 @@ Install directly from the [Chrome Web Store](https://chromewebstore.google.com/d
 
 ---
 
+## Starter Feeds
+
+Not sure what to subscribe to? **[HN Popular Blogs 2025](https://gist.github.com/emschwartz/e6d2bf860ccc367fe37ff953ba6de66b)** is a curated OPML of 95 tech blogs that appeared most on Hacker News. Download the [raw OPML](https://gist.githubusercontent.com/emschwartz/e6d2bf860ccc367fe37ff953ba6de66b/raw/hn-popular-blogs-2025.opml) and import it via **Settings → Import OPML**.
+
+---
+
 ## Privacy
 
 SimpleReader does not collect, transmit, or sell any personal data. All articles and subscriptions live in your browser's local storage. See the full [Privacy Policy](https://leemark.github.io/simplereader/privacy.html).
