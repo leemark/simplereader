@@ -10,8 +10,8 @@ Privacy-focused, local-first RSS reader. No account required.
 ## Features
 
 - Reads **RSS 2.0, Atom, and RSS 1.0 (RDF)** feeds
-- All data stored **locally in Chrome** — nothing leaves your browser
-- **Cross-device sync** via Chrome's built-in Sync (no account needed beyond your Google account)
+- Article content stored **locally in Chrome**
+- Subscriptions and settings use **Chrome Sync** and may sync across your signed-in devices when Chrome Sync is enabled
 - **OPML import and export** — bring your existing subscriptions
 - **Dark mode** and font-size settings
 - **Full-text search** across all loaded articles
@@ -50,7 +50,7 @@ Not sure what to subscribe to? **[HN Popular Blogs 2025](https://gist.github.com
 
 ## Privacy
 
-SimpleReader does not collect, transmit, or sell any personal data. All articles and subscriptions live in your browser's local storage. See the full [Privacy Policy](https://leemark.github.io/simplereader/privacy.html).
+Article content is stored in `chrome.storage.local`. Subscriptions and settings use `chrome.storage.sync`, so Chrome may sync them across your signed-in devices when Chrome Sync is enabled. Feeds are fetched directly from the domains you subscribe to. See the full [Privacy Policy](https://leemark.github.io/simplereader/privacy.html).
 
 ---
 
@@ -58,7 +58,7 @@ SimpleReader does not collect, transmit, or sell any personal data. All articles
 
 | Permission | Reason |
 |---|---|
-| `storage` + `unlimitedStorage` | Store subscriptions, articles, and settings locally |
+| `storage` + `unlimitedStorage` | Store articles locally and subscriptions/settings in Chrome Sync storage |
 | `alarms` | Periodic background feed refresh (every 30 minutes by default) |
 | `host_permissions: *://*/*` | Fetch RSS feeds from any domain the user subscribes to |
 
